@@ -1,0 +1,379 @@
+<script>
+    const url = 'https://dummyjson.com/'
+    
+    //PROMESAS
+    function listProduct() {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest()
+                    request.open('GET', url + 'products')
+                    request.responseType = 'json'
+                    request.onload = function() {
+                        if (request.status == 200) {
+                            resolve(request.response)
+                        } else {
+                            reject(Error(request.statusText))
+                        }
+                    }
+                    request.onerror = function() {
+                        reject(Error('Error: unexpected network error.'))
+                    }
+                    request.send()
+                })
+            }
+    
+    function addProduct(product) {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest()
+                    request.open('POST', url+'products/add')
+                    request.setRequestHeader('Content-Type', 'application/json')
+                    request.onload = function() {
+                        if (request.status == 201) {
+                            resolve(request.response)
+                        } else {
+                            reject(Error(request.statusText))
+                        }
+                    }
+                    request.onerror = function() {
+                        reject(Error('Error: unexpected network error.'))
+                    }
+                    request.send(product)
+                })
+            }
+    
+            function removeProduct(id) {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest()
+                    request.open('DELETE', url + `products/${id}`)
+                    request.setRequestHeader('Content-Type', 'application/json')
+                    request.onload = function() {
+                        if (request.status == 200) {
+                            resolve(request.response)
+                        } else {
+                            reject(Error(request.statusText))
+                        }
+                    }
+                    request.onerror = function() {
+                        reject(Error('Error: unexpected network error.'))
+                    }
+                    request.send()
+                })
+            }
+    
+            function modifyProduct(product) {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest()
+                    request.open('PUT', url + `products/${student.id}`)
+                    request.setRequestHeader('Content-Type', 'application/json')
+                    request.onload = function() {
+                        if (request.status == 200) {
+                            resolve(request.response)
+                        } else {
+                            reject(Error(request.statusText))
+                        }
+                    }
+                    request.onerror = function() {
+                        reject(Error('Error: unexpected network error.'))
+                    }
+                    request.send(product)
+                })
+            }
+    
+            function viewProduct(id) {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest()
+                    request.open('GET', url + `products/${id}`)
+                    request.responseType = 'json'
+                    request.onload = function() {
+                        if (request.status == 200) {
+                            resolve(request.response)
+                        } else {
+                            reject(Error(request.statusText))
+                        }
+                    }
+                    request.onerror = function() {
+                        reject(Error('Error: unexpected network error.'))
+                    }
+                    request.send()
+                })
+            }
+    // FUNCIONES
+    
+    function listarProductos(){
+        listProduct().then(respuesta => {
+            var tbody = document.querySelector('tbody')
+            respuesta.products.forEach(element => {
+                var row = tbody.insertRow(-1)
+                row.setAttribute("id",`${element.id}`)
+                var id = row.insertCell()
+                id.appendChild(document.createTextNode(element.id));
+                var title = row.insertCell()
+                title.appendChild(document.createTextNode(element.title));
+                var description = row.insertCell()
+                description.appendChild(document.createTextNode(element.description));
+                var price = row.insertCell()
+                price.appendChild(document.createTextNode(element.price));
+                var stock = row.insertCell()
+                stock.appendChild(document.createTextNode(element.stock));
+    
+                var producto = JSON.stringify({
+                    "id":element.id,
+                    "title":element.title,
+                    "description":element.description,
+                    "price":element.price,
+                    "stock": element.stock
+                })
+    
+                var add = row.insertCell()
+                add.innerHTML = `<td><td><button onclick='verProducto(${element.id})' id="ver">Ver</button>
+                    <button onclick='borrarProducto(${element.id})'>Borrar</button>
+                    <button onclick='ActualizarProducto(${producto})'>Actualizar</button></td>`
+            
+            });
+        })
+            
+    }
+    
+    // como la api no permite borrar porque es una API de testing, imprimo por consola la respuesta
+    function borrarProducto(id){
+        removeProduct(id).then(respuesta =>{
+            var json = JSON.parse(respuesta)
+            alert("Hubiese sido borrado? Response dice: "+json.isDeleted)
+        })
+    }
+    
+    function ActualizarProducto(producto){
+            var row = document.getElementById(producto.id)
+            row.innerHTML="";
+            var id = row.insertCell()
+                id.innerHTML=`<input type='text' value='${producto.id}' id='id' readonly'>`
+                var title = row.insertCell()
+                title.innerHTML=`<input type='text' value='${producto.title}' id='title''>`
+                var description = row.insertCell()
+                description.innerHTML=`<input type='text' value='${producto.description}' id='description''>`
+                var price = row.insertCell()
+                price.innerHTML=`<input type='number' value='${producto.price}' id='price'>`
+                var stock = row.insertCell()
+                stock.innerHTML=`<input type='number' value='${producto.stock}' id='stock'>`
+                
+                var add = row.insertCell()
+                add.innerHTML = `<td><button onclick='enviarActualizacion()'>Aceptar</button></td>`    
+    }
+    
+    function enviarActualizacion(){
+            var id= document.getElementById("id").value
+            var title= document.getElementById("title").value
+            var description= document.getElementById("description").value
+            var price= document.getElementById("price").value
+            var stock= document.getElementById("stock").value
+    
+            var producto = JSON.stringify({
+                "id":id,
+                "title":title,
+                "description":description,
+                "price":price,
+                "stock":stock
+            })
+            /* como la API solo simula una actualizacion en el response, es que aplico la actualizacion
+            aqui y NO llamo a la funcion ListarProductos*/
+            
+            modifyProduct(producto).then(respuesta =>{
+                var respuesta = JSON.parse(respuesta)
+            
+            var row = document.getElementById(respuesta.id)
+            row.innerHTML=""
+                var id = row.insertCell()
+                id.appendChild(document.createTextNode(respuesta.id));
+                var title = row.insertCell()
+                title.appendChild(document.createTextNode(respuesta.title));
+                var description = row.insertCell()
+                description.appendChild(document.createTextNode(respuesta.description));
+                var price = row.insertCell()
+                price.appendChild(document.createTextNode(respuesta.price));
+                var stock = row.insertCell()
+                stock.appendChild(document.createTextNode(respuesta.stock));
+                var add = row.insertCell()
+                var producto = JSON.stringify({
+                    "id":respuesta.id,
+                    "title":respuesta.title,
+                    "description":respuesta.description,
+                    "price":respuesta.price,
+                    "stock": respuesta.stock
+                })
+                add.innerHTML = `<td><button onclick='verProducto(${producto})' id="ver">Ver</button>
+                    <button onclick='borrarProducto(${respuesta.id})'>Borrar</button>
+                    <button onclick='ActualizarProducto(${producto})'>Actualizar</button></td>`
+            
+        })
+    }
+    
+    function agregarProducto(){
+        var tbody = document.querySelector('tbody')
+        var row = tbody.insertRow(0)
+        var id = row.insertCell()
+                id.innerHTML=``
+                var title = row.insertCell()
+                title.innerHTML=`<input type='text' id='title''>`
+                var description = row.insertCell()
+                description.innerHTML=`<input type='text' id='description''>`
+                var price = row.insertCell()
+                price.innerHTML=`<input type='number' id='price'>`
+                var stock = row.insertCell()
+                stock.innerHTML=`<input type='number' id='stock'>`
+                
+                var add = row.insertCell()
+                add.innerHTML = `<td><button onclick='enviarNuevo()'>Aceptar</button></td>`
+                
+                document.getElementById("agregar").disabled = true;
+    
+    }
+    
+    function enviarNuevo(){
+            var title= document.getElementById("title").value
+            var description= document.getElementById("description").value
+            var price= document.getElementById("price").value
+            var stock= document.getElementById("stock").value
+    
+            var producto = JSON.stringify({
+                    "title":title,
+                    "description":description,
+                    "price":price,
+                    "stock":stock
+                })
+            
+                
+                // como la API no permite agregar uno nuevo aqui iria la logica
+                //addProduct(producto).then(respuesta =>{
+                //    alert(producto)
+                // })
+                alert("JSON PRODUCTO A ENVIAR: " + producto)
+                document.getElementById("agregar").disabled = false;
+                var tbody = document.querySelector('tbody')
+                tbody.deleteRow(0)
+    }
+    
+    function verProducto(id){
+        var modal = document.getElementById("Modal");
+        modal.style.display = "block";
+        var span = document.getElementsByClassName("close")[0];
+                span.onclick= function() {
+            modal.style.display = "none";
+            }
+        
+            viewProduct(id).then(respuesta=>{
+                document.getElementById("titleProduct").innerHTML=respuesta.title
+                var tbody = document.getElementById("modalTbody")
+                var row = tbody.insertRow(0)
+                var id = row.insertCell()
+                id.appendChild(document.createTextNode(respuesta.id));
+                var title = row.insertCell()
+                title.appendChild(document.createTextNode(respuesta.title));
+                var description = row.insertCell()
+                description.appendChild(document.createTextNode(respuesta.description));
+                var price = row.insertCell()
+                price.appendChild(document.createTextNode(respuesta.price));
+                var stock = row.insertCell()
+                stock.appendChild(document.createTextNode(respuesta.stock));
+                var img = row.insertCell()
+                img.innerHTML = `<td><img src='${respuesta.thumbnail}' width="150" height="150"></img></td>`
+            })
+        
+        
+    }
+    
+    
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        var modal = document.getElementById("Modal");
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+    
+    </script>
+    
+    <html>
+        <body onload="listarProductos()">
+            <button onclick="agregarProducto()" id="agregar">Agregar</button>
+        <table border="1" id="listaAlumnos">
+            <caption>LISTADO DE PRODUCTOS</caption>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Producto</th>
+                <th>Descripcion</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+                <!-- DATOS A MOSTRAR -->
+            </tbody>
+        </table>
+    
+        <div id="Modal" class="modal">
+    
+            <!-- Modal content -->
+            <div class="modal-content">
+              <span class="close">&times;</span>
+                
+                <table border="1">
+                    <caption><span id="titleProduct"></span></caption>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Descripcion</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Imagen</th>
+                    </tr>
+                    </thead>
+                    <tbody id="modalTbody">
+                        <!-- DATOS A MOSTRAR -->
+                    </tbody>
+                </table>
+            </div>
+          
+          </div>
+    </body>
+    </html>
+    <style>
+        /* The Modal (background) */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgb(0,0,0); /* Fallback color */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+    
+    /* Modal Content/Box */
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto; /* 15% from the top and centered */
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; /* Could be more or less, depending on screen size */
+    }
+    
+    /* The Close Button */
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    </style>
